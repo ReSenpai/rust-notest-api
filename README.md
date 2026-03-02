@@ -35,9 +35,10 @@ Backend-сервис для управления TODO-списками и зад
 ### Auth
 - [x] `POST /auth/register` — регистрация
 - [x] `POST /auth/login` — вход (JWT-токен)
+- [x] `GET /auth/me` — проверка авторизации по токену
 - [x] Argon2 хеширование паролей
 - [x] Генерация JWT (HS256, 24ч)
-- [x] Интеграционные тесты auth (5 тестов)
+- [x] Интеграционные тесты auth (8 тестов)
 - [x] JWT middleware (защита маршрутов) + 3 теста
 
 ### Health
@@ -96,7 +97,7 @@ todo-api/
 │   ├── middleware/
 │   │   └── auth.rs            # AuthUser extractor — проверка JWT из заголовка
 │   ├── routes/
-│   │   ├── auth.rs            # POST /auth/register, /auth/login
+│   │   ├── auth.rs            # POST /auth/register, /auth/login, GET /auth/me
 │   │   ├── health.rs          # GET /health
 │   │   ├── lists.rs           # POST/GET/PUT/DELETE /lists
 │   │   └── tasks.rs           # POST/GET/PUT/DELETE /lists/:id/tasks
@@ -118,13 +119,13 @@ todo-api/
 │   │   ├── todo_list.rs       # TodoList { id, user_id, title, timestamps }
 │   │   └── task.rs            # Task { id, list_id, title, status, timestamps }
 │   └── dto/
-│       ├── auth.rs            # RegisterRequest, LoginRequest, AuthResponse
+│       ├── auth.rs            # RegisterRequest, LoginRequest, AuthResponse, MeResponse
 │       ├── lists.rs           # CreateListRequest, UpdateListRequest, ListResponse
 │       └── tasks.rs           # CreateTaskRequest, UpdateTaskRequest, TaskResponse
 ├── tests/
 │   ├── common/mod.rs          # test_app_state(), cleanup_user()
 │   ├── health.rs              # 1 тест
-│   ├── auth.rs                # 5 тестов
+│   ├── auth.rs                # 8 тестов
 │   ├── middleware_auth.rs     # 3 теста
 │   ├── lists.rs               # 7 тестов
 │   └── tasks.rs               # 7 тестов
@@ -161,7 +162,7 @@ todo-api/
 | Конфигурация    | .env (dotenvy)                            |
 | Логирование     | tracing + tracing-subscriber              |
 | Ошибки          | AppError (thiserror)                      |
-| Тестирование    | Integration tests (TDD), 23 теста         |
+| Тестирование    | Integration tests (TDD), 26 тестов         |
 | Инфраструктура  | Docker (multi-stage), docker-compose      |
 | CI/CD           | GitHub Actions, GHCR, SSH deploy          |
 | Документация     | utoipa + Swagger UI (OpenAPI 3.1)         |
@@ -177,8 +178,8 @@ todo-api/
 3. **Refactor** — улучшаем код, тесты остаются зелёными
 
 ```bash
-cargo test                       # все 23 теста
-cargo test --test auth           # 5 тестов auth
+cargo test                       # все 26 тестов
+cargo test --test auth           # 8 тестов auth
 cargo test --test health         # 1 тест health
 cargo test --test middleware_auth # 3 теста middleware
 cargo test --test lists          # 7 тестов lists

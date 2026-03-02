@@ -15,6 +15,7 @@ use crate::state::AppState;
         // Auth
         handlers::auth::register,
         handlers::auth::login,
+        handlers::auth::me,
         // Lists
         handlers::lists::create,
         handlers::lists::get_all,
@@ -34,6 +35,7 @@ use crate::state::AppState;
             crate::dto::auth::RegisterRequest,
             crate::dto::auth::LoginRequest,
             crate::dto::auth::AuthResponse,
+            crate::dto::auth::MeResponse,
             // Lists
             crate::dto::lists::CreateListRequest,
             crate::dto::lists::UpdateListRequest,

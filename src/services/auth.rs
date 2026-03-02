@@ -129,3 +129,19 @@ pub fn validate_jwt(token: &str, secret: &str) -> Result<Claims, AppError> {
 
     Ok(token_data.claims)
 }
+
+/// Возвращает информацию о текущем пользователе по его ID из токена.
+pub async fn me(pool: &PgPool, user_id: &str) -> Result<crate::dto::auth::MeResponse, AppError> {
+    let uuid = uuid::Uuid::parse_str(user_id)
+        .map_err(|_| AppError::Unauthorized)?;
+
+    let user = user_repo::find_by_id(pool, uuid)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    Ok(crate::dto::auth::MeResponse {
+        id: user.id.to_string(),
+        email: user.email,
+        created_at: user.created_at.map(|dt| dt.to_rfc3339()),
+    })
+}
