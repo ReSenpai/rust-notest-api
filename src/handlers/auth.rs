@@ -2,8 +2,9 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 
-use crate::dto::auth::{AuthResponse, LoginRequest, RegisterRequest};
+use crate::dto::auth::{AuthResponse, LoginRequest, MeResponse, RegisterRequest};
 use crate::errors::AppError;
+use crate::middleware::auth::AuthUser;
 use crate::services;
 use crate::state::AppState;
 
@@ -50,4 +51,28 @@ pub async fn login(
 
     // 200 OK — возвращается автоматически для Json<T> без явного StatusCode.
     Ok(Json(AuthResponse { token }))
+}
+
+/// GET /auth/me — информация о текущем пользователе.
+///
+/// Требует валидный JWT-токен в заголовке `Authorization: Bearer <token>`.
+/// Возвращает id, email и дату регистрации пользователя.
+#[utoipa::path(
+    get,
+    path = "/auth/me",
+    tag = "Auth",
+    security(
+        ("bearer_auth" = [])
+    ),
+    responses(
+        (status = 200, description = "Информация о пользователе", body = MeResponse),
+        (status = 401, description = "Невалидный или отсутствующий токен", body = crate::dto::ErrorResponse)
+    )
+)]
+pub async fn me(
+    State(state): State<AppState>,
+    auth_user: AuthUser,
+) -> Result<Json<MeResponse>, AppError> {
+    let response = services::auth::me(&state.db, &auth_user.user_id).await?;
+    Ok(Json(response))
 }

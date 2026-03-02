@@ -188,3 +188,66 @@ async fn login_with_nonexistent_email_returns_401() {
     let response = app.oneshot(request).await.unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
+
+// ==================== ME TESTS ====================
+
+#[tokio::test]
+async fn me_with_valid_token_returns_200_and_user_info() {
+    let state = common::test_app_state().await;
+    let pool = state.db.clone();
+    let email = "me_valid@example.com";
+
+    common::cleanup_user(&pool, email).await;
+    let token = common::get_auth_token(&state, email).await;
+
+    let app = create_router().with_state(state);
+    let request = Request::builder()
+        .method("GET")
+        .uri("/auth/me")
+        .header("Authorization", format!("Bearer {}", token))
+        .body(axum::body::Body::empty())
+        .unwrap();
+
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+
+    assert!(body.get("id").is_some(), "Response should contain 'id' field");
+    assert_eq!(body["email"].as_str().unwrap(), email);
+    assert!(body.get("created_at").is_some(), "Response should contain 'created_at' field");
+
+    common::cleanup_user(&pool, email).await;
+}
+
+#[tokio::test]
+async fn me_without_token_returns_401() {
+    let state = common::test_app_state().await;
+
+    let app = create_router().with_state(state);
+    let request = Request::builder()
+        .method("GET")
+        .uri("/auth/me")
+        .body(axum::body::Body::empty())
+        .unwrap();
+
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn me_with_invalid_token_returns_401() {
+    let state = common::test_app_state().await;
+
+    let app = create_router().with_state(state);
+    let request = Request::builder()
+        .method("GET")
+        .uri("/auth/me")
+        .header("Authorization", "Bearer invalid.token.here")
+        .body(axum::body::Body::empty())
+        .unwrap();
+
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
